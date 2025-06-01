@@ -1,5 +1,5 @@
-import express from 'express';
-import { createConnection } from '../db/connection';
+const express = require('express');
+const { createConnection } = require('../db/connection');
 
 const router = express.Router();
 
@@ -8,7 +8,6 @@ router.get('/api/data', async (req, res) => {
     const connection = await createConnection();
     const [rows] = await connection.execute('SELECT * FROM loct_data_secure_fields_new');
 
-   
     await connection.end();
 
     res.json(rows);
@@ -18,4 +17,4 @@ router.get('/api/data', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
