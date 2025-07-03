@@ -9,8 +9,9 @@ const app = express();
 // Middleware
 
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: false  // unless using cookies
+  origin: '*', // Allow all origins, adjust as needed for security
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow specific HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allow specific headers
 }));
 app.use(express.json());
 
