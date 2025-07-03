@@ -79,14 +79,14 @@ router.post('/api/login', async (req, res) => {
     const { identifier, password } = req.body;
 
     if (!identifier || !password) {
-      return res.status(400).json({ error: 'Identifier ( email) and password are required' });
+      return res.status(400).json({ error: 'Identifier (username or email) and password are required' });
     }
 
     const connection = await createConnection();
 
     // Find the user by id (username) or email
     const [users] = await connection.execute(
-      'SELECT * FROM mfa WHERE Email = ?',
+      'SELECT * FROM mfa WHERE Id = ? OR Email = ?',
       [identifier, identifier]
     );
 
