@@ -1,17 +1,32 @@
-const cors = require('cors');
-const express = require('express');
-const dataRoutes = require('./src/routes/data');
 require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const dataRoutes = require('./src/routes/data');
+const registrationRoutes = require('./src/routes/registration');
 
 const app = express();
-const port = process.env.PORT || 5000;
 
-app.use(cors());
+// Middleware
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: false  // unless using cookies
+}));
 app.use(express.json());
 
-// Use the data routes
-app.use(dataRoutes);
+// Add this logging middleware
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// Routes
+app.use( dataRoutes);
+app.use(registrationRoutes);
+
+// Add an error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({ message: 'Internal server error' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
