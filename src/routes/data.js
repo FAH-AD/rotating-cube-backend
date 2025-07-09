@@ -1,5 +1,5 @@
-const express = require('express');
-const { createConnection } = require('../db/connection');
+import express from 'express';
+import { createConnection } from '../db/connection.js';
 
 const router = express.Router();
 
@@ -129,4 +129,4 @@ router.delete('/api/delete-entry/:id', async (req, res) => {
 });
 
 
-module.exports = router;
+export default router;

@@ -1,8 +1,13 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const dataRoutes = require('./src/routes/data');
-const registrationRoutes = require('./src/routes/registration');
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import dataRoutes from './src/routes/data.js';
+import registrationRoutes from './src/routes/registration.js';
+import faceRoutes from './src/routes/faceauth.js';
+import { generateCrudRoutes } from './src/routes/generateCrudRoutes.js';
+import twillioRoutes from './src/routes/twillioAuth.js';
+
+dotenv.config();
 
 const app = express();
 
@@ -16,10 +21,33 @@ app.use(cors({
 app.use(express.json());
 
 // Add this logging middleware
+// Billing Table
+app.use(generateCrudRoutes('billing', [
+  'Bill Number', 'Data of Bill', 'Items', 'Price', 'Discount', 'Net', 'Paid On', 'Paid Via'
+]));
 
+// MFA Table
+app.use(generateCrudRoutes('mfa', [
+  'Company Name', 'Address_street', 'Address_street2', 'City', 'State', 'Country', 'Zipcode',
+  'Phone number', 'F_Name', 'L_Name', 'Id', 'Password', 'Email address', 'Type'
+]));
+
+// Parameters Table
+app.use(generateCrudRoutes('parameters', [
+  'Authorization to', 'Module Assigned', 'id', 'password', 'other interal access auth'
+]));
+
+// Pricing Table
+app.use(generateCrudRoutes('pricing', [
+  'Tool Tips', 'Executable 2 Letters', 'Supply Chain Impact',
+  'Charge Attributed to', 'Unit Price', 'Discount'
+]));
 // Routes
+
 app.use( dataRoutes);
 app.use(registrationRoutes);
+app.use('/api', faceRoutes);
+app.use('/api/auth', twillioRoutes);
 
 // Add an error handling middleware
 app.use((err, req, res, next) => {
