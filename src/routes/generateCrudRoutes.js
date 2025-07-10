@@ -6,39 +6,45 @@ export function generateCrudRoutes(tableName, columns) {
   const router = express.Router();
 
   // GET all
-  router.get(`/api/${tableName}`, async (req, res) => {
-    try {
-      const connection = await createConnection();
-      const [rows] = await connection.execute(`SELECT * FROM \`${tableName}\``);
-      await connection.end();
-      res.json(rows);
-    } catch (err) {
-      console.error(`GET ${tableName} error:`, err);
-      res.status(500).json({ error: `Failed to fetch ${tableName}` });
-    }
-  });
+ // Inside generateCrudRoutes()
+router.get(`/api/${tableName}`, async (req, res) => {
+  try {
+    const connection = await createConnection();
+    const selectCols = ['my_row_id', ...columns].map(col => `\`${col}\``).join(', ');
+    const [rows] = await connection.execute(`SELECT ${selectCols} FROM \`${tableName}\``);
+    await connection.end();
+    res.json(rows);
+  } catch (err) {
+    console.error(`GET ${tableName} error:`, err);
+    res.status(500).json({ error: `Failed to fetch ${tableName}` });
+  }
+});
+
 
   // CREATE
-  router.post(`/api/${tableName}`, async (req, res) => {
-    try {
-      const values = columns.map(col => req.body[col]);
-      if (values.includes(undefined)) {
-        return res.status(400).json({ error: 'All fields are required' });
-      }
-
-      const placeholders = columns.map(() => '?').join(', ');
-      const connection = await createConnection();
-      const [result] = await connection.execute(
-        `INSERT INTO \`${tableName}\` (${columns.join(', ')}) VALUES (${placeholders})`,
-        values
-      );
-      await connection.end();
-      res.status(201).json({ message: 'Entry created successfully', id: result.insertId });
-    } catch (err) {
-      console.error(`POST ${tableName} error:`, err);
-      res.status(500).json({ error: `Failed to create in ${tableName}` });
+ // CREATE
+router.post(`/api/${tableName}`, async (req, res) => {
+  try {
+    const values = columns.map(col => req.body[col]);
+    if (values.includes(undefined)) {
+      return res.status(400).json({ error: 'All fields are required' });
     }
-  });
+
+    const placeholders = columns.map(() => '?').join(', ');
+    const columnsEscaped = columns.map(col => `\`${col}\``).join(', ');
+
+    const connection = await createConnection();
+    const [result] = await connection.execute(
+      `INSERT INTO \`${tableName}\` (${columnsEscaped}) VALUES (${placeholders})`,
+      values
+    );
+    await connection.end();
+    res.status(201).json({ message: 'Entry created successfully', id: result.insertId });
+  } catch (err) {
+    console.error(`POST ${tableName} error:`, err);
+    res.status(500).json({ error: `Failed to create in ${tableName}` });
+  }
+});
 
   // UPDATE
   router.put(`/api/${tableName}/:id`, async (req, res) => {

@@ -29,7 +29,7 @@ app.use(generateCrudRoutes('billing', [
 // MFA Table
 app.use(generateCrudRoutes('mfa', [
   'Company Name', 'Address_street', 'Address_street2', 'City', 'State', 'Country', 'Zipcode',
-  'Phone number', 'F_Name', 'L_Name', 'Id', 'Password', 'Email address', 'Type'
+  'Phone number', 'F_Name', 'L_Name', 'Id', 'Password', 'Email', 'Type'
 ]));
 
 // Parameters Table

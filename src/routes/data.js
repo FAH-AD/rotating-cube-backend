@@ -49,7 +49,7 @@ router.post('/api/increase-tip-selected', async (req, res) => {
 });
 
 
-router.post('/api/create-entry', async (req, res) => {
+router.post('/api/data', async (req, res) => {
   try {
     const { Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand } = req.body;
 
@@ -74,7 +74,7 @@ router.post('/api/create-entry', async (req, res) => {
 });
 
 // New PUT endpoint to edit an existing entry
-router.put('/api/edit-entry/:id', async (req, res) => {
+router.put('/api/data/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand } = req.body;
@@ -104,7 +104,7 @@ router.put('/api/edit-entry/:id', async (req, res) => {
 });
 
 // New DELETE endpoint to delete an entry
-router.delete('/api/delete-entry/:id', async (req, res) => {
+router.delete('/api/data/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
