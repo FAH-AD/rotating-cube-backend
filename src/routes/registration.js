@@ -149,6 +149,62 @@ router.post('/api/login', async (req, res) => {
 });
 
 
+
+
+router.post('/api/master-login', async (req, res) => {
+  try {
+    const { identifier, password, fingerprint } = req.body;
+
+    if (!identifier || !password || !fingerprint) {
+      return res.status(400).json({ error: 'Identifier, password, and device fingerprint are required' });
+    }
+
+    const connection = await createConnection();
+    const [users] = await connection.execute(
+      'SELECT * FROM mfa WHERE (Id = ? OR Email = ?) AND Type = "Master"',
+      [identifier, identifier]
+    );
+    await connection.end();
+
+    if (users.length === 0) {
+      return res.status(403).json({ error: 'Only Master can access this login' });
+    }
+
+    const user = users[0];
+    const isPasswordValid = await bcrypt.compare(password, user.Password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const alreadyVerified = await isDeviceVerified(user.Email, fingerprint);
+
+    if (alreadyVerified) {
+      return res.json({ message: 'Master login successful', userId: user.Id, verified: true });
+    }
+
+    const encryptedPhone = encryptPhoneNumber(user['Phone number']);
+    // New device → Send OTP via Twilio
+    deleteDeviceOTP(user.Email, fingerprint); // Clear any previous OTPs for this device
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    await sendOTP(user['Phone number'], code);
+    storeDeviceOTP(user.Email, fingerprint, code);
+
+    return res.json({
+      success: true,
+      requiresVerification: true,
+      phone: encryptedPhone,
+      message: 'OTP sent to registered phone number',
+      userId: user.Id
+    });
+  } catch (error) {
+    console.error('Master login error:', error);
+    res.status(500).json({ error: 'Error during master login' });
+  }
+});
+
+
+
+
 router.post('/api/verify-device', async (req, res) => {
   const { email, fingerprint, code } = req.body;
 

@@ -49,19 +49,32 @@ router.post('/api/increase-tip-selected', async (req, res) => {
 });
 
 
+
+
+// Modified POST endpoint to add a new entry
 router.post('/api/data', async (req, res) => {
   try {
-    const { Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand } = req.body;
+    const { 
+      Images, 
+     "Tool_Tip-non_executable":ToolTipNonExecutable, 
+      Executable_two_Letters, 
+      ToolTips, 
+      Status, 
+      "Executable Command": ExecutableCommand,
+      "Number of times tip selected": NumberOfTimesSelected
+    } = req.body;
 
-    if (!Images || !ToolTipNonExecutable || !ExecutableTwoLetters || !ToolTips || !Status || !ExecutableCommand) {
+
+    console.log('Received data for new entry:', req.body); // Log the received data for debugging
+    if (!Images || !ToolTipNonExecutable || !Executable_two_Letters || !ToolTips || !Status || !ExecutableCommand) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
     const connection = await createConnection();
 
     const [result] = await connection.execute(
-      'INSERT INTO executable_commands (`Images`, `Tool_Tip-non_executable`, `Executable_two_Letters`, `ToolTips`, `Status`, `Executable Command`) VALUES (?, ?, ?, ?, ?, ?)',
-      [Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand]
+      'INSERT INTO executable_commands (`Images`, `Tool_Tip-non_executable`, `Executable_two_Letters`, `ToolTips`, `Status`, `Executable Command`, `Number of times tip selected`) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [Images, ToolTipNonExecutable, Executable_two_Letters, ToolTips, Status, ExecutableCommand, NumberOfTimesSelected || 0]
     );
 
     await connection.end();
@@ -73,21 +86,29 @@ router.post('/api/data', async (req, res) => {
   }
 });
 
-// New PUT endpoint to edit an existing entry
+// Modified PUT endpoint to edit an existing entry
 router.put('/api/data/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand } = req.body;
-
-    if (!Images || !ToolTipNonExecutable || !ExecutableTwoLetters || !ToolTips || !Status || !ExecutableCommand) {
+    const { 
+      Images, 
+      "Tool_Tip-non_executable":ToolTipNonExecutable, 
+      Executable_two_Letters, 
+      ToolTips, 
+      Status, 
+      "Executable Command": ExecutableCommand,
+      "Number of times tip selected": NumberOfTimesSelected
+    } = req.body;
+     // Log the received data for debugging
+    if (!Images  || !Executable_two_Letters || !ToolTips || !Status|| !ExecutableCommand || !ToolTipNonExecutable) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
     const connection = await createConnection();
 
     const [result] = await connection.execute(
-      'UPDATE executable_commands SET `Images` = ?, `Tool_Tip-non_executable` = ?, `Executable_two_Letters` = ?, `ToolTips` = ?, `Status` = ?, `Executable Command` = ? WHERE `my_row_id` = ?',
-      [Images, ToolTipNonExecutable, ExecutableTwoLetters, ToolTips, Status, ExecutableCommand, id]
+      'UPDATE executable_commands SET `Images` = ?, `Tool_Tip-non_executable` = ?, `Executable_two_Letters` = ?, `ToolTips` = ?, `Status` = ?, `Executable Command` = ?, `Number of times tip selected` = ? WHERE `my_row_id` = ?',
+      [Images, ToolTipNonExecutable, Executable_two_Letters, ToolTips, Status, ExecutableCommand, NumberOfTimesSelected, id]
     );
 
     await connection.end();
@@ -103,7 +124,7 @@ router.put('/api/data/:id', async (req, res) => {
   }
 });
 
-// New DELETE endpoint to delete an entry
+// Modified DELETE endpoint to delete an entry
 router.delete('/api/data/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,6 +148,5 @@ router.delete('/api/data/:id', async (req, res) => {
     res.status(500).json({ error: 'Error deleting entry from database' });
   }
 });
-
 
 export default router;
