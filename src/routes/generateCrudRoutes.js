@@ -2,60 +2,65 @@
 import express from 'express';
 import { createConnection } from '../db/connection.js';
 
-export function generateCrudRoutes(tableName, columns) {
+export function generateCrudRoutes(tableName, columnDefinitions) {
   const router = express.Router();
 
-  // GET all
- // Inside generateCrudRoutes()
-router.get(`/api/${tableName}`, async (req, res) => {
-  try {
-    const connection = await createConnection();
-    const selectCols = ['my_row_id', ...columns].map(col => `\`${col}\``).join(', ');
-    const [rows] = await connection.execute(`SELECT ${selectCols} FROM \`${tableName}\``);
-    await connection.end();
-    res.json(rows);
-  } catch (err) {
-    console.error(`GET ${tableName} error:`, err);
-    res.status(500).json({ error: `Failed to fetch ${tableName}` });
-  }
-});
+  // Helper function to get column names
+  const getColumnNames = (type) => columnDefinitions.map(col => 
+    typeof col === 'object' ? col[type] : col
+  );
 
+  const dbColumns = getColumnNames('dbName');
+  const frontendColumns = getColumnNames('frontendName');
+
+  // GET all
+  router.get(`/api/${tableName}`, async (req, res) => {
+    try {
+      const connection = await createConnection();
+      const selectCols = ['my_row_id', ...dbColumns].map(col => `\`${col}\``).join(', ');
+      const [rows] = await connection.execute(`SELECT ${selectCols} FROM \`${tableName}\``);
+      await connection.end();
+      res.json(rows);
+    } catch (err) {
+      console.error(`GET ${tableName} error:`, err);
+      res.status(500).json({ error: `Failed to fetch ${tableName}` });
+    }
+  });
 
   // CREATE
- // CREATE
-router.post(`/api/${tableName}`, async (req, res) => {
-  try {
-    const values = columns.map(col => req.body[col]);
-    if (values.includes(undefined)) {
-      return res.status(400).json({ error: 'All fields are required' });
+  router.post(`/api/${tableName}`, async (req, res) => {
+    try {
+      const values = frontendColumns.map(col => req.body[col]);
+      if (values.includes(undefined)) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      const placeholders = dbColumns.map(() => '?').join(', ');
+      const columnsEscaped = dbColumns.map(col => `\`${col}\``).join(', ');
+
+      const connection = await createConnection();
+      const [result] = await connection.execute(
+        `INSERT INTO \`${tableName}\` (${columnsEscaped}) VALUES (${placeholders})`,
+        values
+      );
+      await connection.end();
+      res.status(201).json({ message: 'Entry created successfully', id: result.insertId });
+    } catch (err) {
+      console.error(`POST ${tableName} error:`, err);
+      res.status(500).json({ error: `Failed to create in ${tableName}` });
     }
-
-    const placeholders = columns.map(() => '?').join(', ');
-    const columnsEscaped = columns.map(col => `\`${col}\``).join(', ');
-
-    const connection = await createConnection();
-    const [result] = await connection.execute(
-      `INSERT INTO \`${tableName}\` (${columnsEscaped}) VALUES (${placeholders})`,
-      values
-    );
-    await connection.end();
-    res.status(201).json({ message: 'Entry created successfully', id: result.insertId });
-  } catch (err) {
-    console.error(`POST ${tableName} error:`, err);
-    res.status(500).json({ error: `Failed to create in ${tableName}` });
-  }
-});
+  });
 
   // UPDATE
   router.put(`/api/${tableName}/:id`, async (req, res) => {
     try {
       const { id } = req.params;
-      const values = columns.map(col => req.body[col]);
+      const values = frontendColumns.map(col => req.body[col]);
       if (values.includes(undefined)) {
         return res.status(400).json({ error: 'All fields are required' });
       }
 
-      const setClause = columns.map(col => `\`${col}\` = ?`).join(', ');
+      const setClause = dbColumns.map(col => `\`${col}\` = ?`).join(', ');
       const connection = await createConnection();
       const [result] = await connection.execute(
         `UPDATE \`${tableName}\` SET ${setClause} WHERE \`my_row_id\` = ?`,

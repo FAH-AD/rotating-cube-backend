@@ -23,7 +23,11 @@ app.use(express.json());
 // Add this logging middleware
 // Billing Table
 app.use(generateCrudRoutes('billing', [
-  'Bill Number', 'Data of Bill', 'Items', 'Price', 'Discount', 'Net', 'Paid On', 'Paid Via'
+  'Bill Number',
+   { frontendName: 'date_of_bill', dbName: 'Data of Bill' },
+    'Items',
+     { frontendName: 'pricing_row_id', dbName: 'pricing_id' },
+     'Paid On', 'Paid Via'
 ]));
 
 // MFA Table

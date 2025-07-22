@@ -80,7 +80,7 @@ router.post('/api/register', async (req, res) => {
     // Insert the new user
    const [result] = await connection.execute(
   'INSERT INTO mfa (`Company Name`, Address_street, Address_street2, City, State, Country, Zipcode, `Phone number`, F_Name, L_Name, Id, Password, Email, Type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-  [companyName, addressStreet, addressStreet2 || null, city, state, country, zipcode, phoneNumber, fName, lName, id, hashedPassword, email, type]
+  [companyName, addressStreet, addressStreet2 || null, city, state, country, zipcode, phoneNumber, fName, lName, id, password, email, type]
 );
 
  await saveVerifiedDevice(email, fingerprint);
@@ -120,7 +120,7 @@ router.post('/api/login', async (req, res) => {
     if (users.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
 
     const user = users[0];
-    const isPasswordValid = await bcrypt.compare(password, user.Password);
+   const isPasswordValid = password === user.Password;
     if (!isPasswordValid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const alreadyVerified = await isDeviceVerified(user.Email, fingerprint);
@@ -171,7 +171,7 @@ router.post('/api/master-login', async (req, res) => {
     }
 
     const user = users[0];
-    const isPasswordValid = await bcrypt.compare(password, user.Password);
+    const isPasswordValid = password === user.Password;
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

@@ -149,4 +149,18 @@ router.delete('/api/data/:id', async (req, res) => {
   }
 });
 
+
+router.get('/api/billing-view', async (req, res) => {
+  try {
+    const connection = await createConnection();
+    const [rows] = await connection.execute('SELECT * FROM billing_view');
+    await connection.end();
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching billing data:', error);
+    res.status(500).json({ error: 'Error fetching billing data from database' });
+  }
+});
+
 export default router;
